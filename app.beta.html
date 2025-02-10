@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fitness App</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f9;
+      margin: 0;
+      padding: 0;
+      color: #333;
+    }
+    .container {
+      max-width: 600px;
+      margin: 20px auto;
+      padding: 20px;
+      background-color: #fff;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    h1, h2, h3 {
+      text-align: center;
+      color: #4CAF50;
+    }
+    button {
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      width: 100%;
+      margin-top: 10px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    .section {
+      margin-bottom: 20px;
+      padding: 15px;
+      background-color: #f9f9f9;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    .hidden {
+      display: none;
+    }
+    .tab {
+      display: flex;
+      justify-content: space-around;
+      margin-bottom: 20px;
+    }
+    .tab button {
+      flex: 1;
+      margin: 0 5px;
+      background-color: #ddd;
+      color: #333;
+      border-radius: 5px;
+    }
+    .tab button.active {
+      background-color: #4CAF50;
+      color: white;
+    }
+    .progress-bar {
+      width: 100%;
+      background-color: #ddd;
+      border-radius: 5px;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+    .progress-bar-fill {
+      height: 10px;
+      background-color: #4CAF50;
+      width: 0;
+      transition: width 0.3s ease;
+    }
+    .imc-result {
+      margin-top: 20px;
+      padding: 15px;
+      background-color: #e3f2fd;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    #chatArea {
+      height: 300px;
+      overflow-y: auto;
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 5px;
+      background-color: #f9f9f9;
+    }
+    #chatbotToggle {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      font-size: 24px;
+      cursor: pointer;
+      z-index: 1000;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <!-- SECCIÓN DE EVALUACIÓN Y CONFIGURACIÓN -->
+  <div class="container eval" id="step1">
+    <h1>👤 ¿Eres Ectomorfo, Endomorfo o Mesomorfo?</h1>
+    <button onclick="nextStep(2, 'Ectomorfo')">🦵 Ectomorfo – Flaco</button>
+    <button onclick="nextStep(2, 'Endomorfo')">🍔 Endomorfo – Gordo/Obeso</button>
+    <button onclick="nextStep(2, 'Mesomorfo')">💪 Mesomorfo – Medio</button>
+    <button onclick="nextStep(2, 'NoSé')">❓ No sé</button>
+  </div>
+
+  <div class="container eval hidden" id="step2">
+    <h1>👤 ¿Cómo te ves físicamente?</h1>
+    <button onclick="nextStep(3, 'Ectomorfo')">🦵 Muy delgado, difícil de ganar peso</button>
+    <button onclick="nextStep(3, 'Endomorfo')">🍔 Gano peso (especialmente grasa) con facilidad</button>
+    <button onclick="nextStep(3, 'Mesomorfo')">💪 Gano músculo fácilmente</button>
+    <button onclick="nextStep(3, 'Neutral')">⚖️ Ni gano ni pierdo fácilmente</button>
+  </div>
+
+  <div class="container eval hidden" id="step3">
+    <h1>💪 Nivel de entrenamiento</h1>
+    <button onclick="setTrainingLevel('Muy Bajo')">👶 Muy Bajo</button>
+    <button onclick="setTrainingLevel('Bajo')">🐢 Bajo</button>
+    <button onclick="setTrainingLevel('Medio')">🦸‍♂️ Medio</button>
+    <button onclick="setTrainingLevel('Medio Alto')">💥 Medio Alto</button>
+    <button onclick="setTrainingLevel('Profesional')">🔥 Profesional</button>
+  </div>
+
+  <div class="container eval hidden" id="step4">
+    <h1>🏋️‍♂️ ¿Tienes acceso a un gimnasio?</h1>
+    <button onclick="setGymAccess(true)">🏋️‍♂️ Sí</button>
+    <button onclick="setGymAccess(false)">🏠 No</button>
+  </div>
+
+  <!-- SECCIÓN PRINCIPAL: Rutinas, Peso y Dietas -->
+  <div class="container hidden" id="mainSection">
+    <div class="tab">
+      <button onclick="showTab('rutinas')" class="active">🏋️‍♂️ Rutinas</button>
+      <button onclick="showTab('peso')">📊 Peso</button>
+      <button onclick="showTab('dietas')">🍎 Dietas</button>
+    </div>
+
+    <div id="rutinas" class="tab-content">
+      <h2>🏋️‍♂️ Rutinas Progresivas</h2>
+      <div class="section">
+        <h3>Semana Actual: <span id="semanaActual">1</span></h3>
+        <div class="progress-bar">
+          <div class="progress-bar-fill" id="progressBar"></div>
+        </div>
+        <button onclick="completarSemana()">Completar Semana</button>
+      </div>
+      <div class="section" id="rutinaRecomendada">
+        <h3>Rutina Recomendada</h3>
+        <textarea id="rutinaTexto" rows="10" placeholder="Aquí aparecerá tu rutina..."></textarea>
+        <button onclick="guardarRutina()">Guardar Cambios</button>
+      </div>
+    </div>
+
+    <div id="peso" class="tab-content hidden">
+      <h2>📊 Registro de Peso</h2>
+      <div class="section">
+        <input type="number" id="weight" placeholder="Peso (kg)">
+        <input type="number" id="height" placeholder="Altura (m)">
+        <button onclick="addWeight()">Añadir Peso</button>
+        <button onclick="clearWeights()">Borrar Pesos</button>
+      </div>
+      <div class="section">
+        <h3>Evolución del Peso</h3>
+        <canvas id="weightChart"></canvas>
+      </div>
+      <div class="imc-result" id="imcResult">
+        <h3>Tu IMC:</h3>
+        <p id="imcValue"></p>
+      </div>
+    </div>
+
+    <div id="dietas" class="tab-content hidden">
+      <h2>🍎 Dietas Recomendadas</h2>
+      <div class="section">
+        <h3>Selecciona tu objetivo:</h3>
+        <select id="objetivoDieta">
+          <option value="ganar_masa">Ganar Masa Muscular</option>
+          <option value="definicion">Definición</option>
+          <option value="perder_peso">Perder Peso</option>
+        </select>
+        <button onclick="mostrarDieta()">Mostrar Dieta</button>
+      </div>
+      <div class="section" id="dietaRecomendada">
+        <h3>Dieta Recomendada</h3>
+        <p id="dietaTexto"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ChatBot Entrenador Virtual -->
+  <div class="container hidden" id="chatbot">
+    <h2>Entrenador Virtual</h2>
+    <div id="chatArea"></div>
+    <input type="text" id="userInput" placeholder="Escribe tu pregunta..." onkeypress="if(event.key==='Enter') sendMessage()">
+    <button onclick="sendMessage()">Enviar</button>
+  </div>
+
+  <!-- Botón para mostrar/ocultar el ChatBot -->
+  <button id="chatbotToggle" onclick="toggleChatbot()">💬</button>
+
+  <script>
+    /* VARIABLES GLOBALES */
+    let gymAccess = false, semanaActual = 1, tipoCuerpoUsuario = "", nivelEntrenamiento = "";
+
+    /* Ejercicios recomendados según objetivo */
+    const exerciseRecommendations = {
+      ganar_masa: [
+        { name: "Press de banca", muscles: "Pectorales, tríceps y deltoides", explanation: "Es fundamental para aumentar la masa muscular en la parte superior del cuerpo." },
+        { name: "Sentadillas", muscles: "Cuádriceps, glúteos e isquiotibiales", explanation: "Ayuda a desarrollar fuerza y volumen en las piernas, esenciales para la estabilidad." },
+        { name: "Peso muerto", muscles: "Espalda, glúteos y piernas", explanation: "Trabaja varios grupos musculares y mejora la fuerza general." }
+      ],
+      definicion: [
+        { name: "Entrenamiento HIIT", muscles: "Todo el cuerpo", explanation: "Mejora la definición y quema grasa al combinar intervalos intensos con periodos de descanso." },
+        { name: "Remo con barra", muscles: "Espalda, bíceps y hombros", explanation: "Ayuda a definir la parte superior del cuerpo y mejorar la postura." },
+        { name: "Plancha", muscles: "Core, abdominales y espalda baja", explanation: "Fortalece el core y mejora la estabilidad, lo que contribuye a una buena definición." }
+      ],
+      perder_peso: [
+        { name: "Burpees", muscles: "Todo el cuerpo", explanation: "Ejercicio cardiovascular que quema muchas calorías y mejora la resistencia." },
+        { name: "Sprints", muscles: "Piernas y core", explanation: "Aumenta la quema de grasa y mejora la capacidad cardiovascular en periodos cortos." },
+        { name: "Circuito de entrenamiento", muscles: "Varios grupos musculares", explanation: "Combina ejercicios de fuerza y cardio para maximizar la quema de grasa." }
+      ]
+    };
+
+    /* Rutinas personalizadas */
+    const rutinas = {
+      gym: {
+        Ectomorfo: {
+          Muy_Bajo: "Rutina para Ectomorfo en gimnasio (Nivel Muy Bajo):\n- Press de banca 3x10\n- Sentadillas 3x12\n- Peso muerto 3x8",
+          Bajo: "Rutina para Ectomorfo en gimnasio (Nivel Bajo):\n- Press de banca 4x10\n- Sentadillas 4x12\n- Peso muerto 4x8",
+          Medio: "Rutina para Ectomorfo en gimnasio (Nivel Medio):\n- Press de banca 4x12\n- Sentadillas 4x15\n- Peso muerto 4x10",
+          Medio_Alto: "Rutina para Ectomorfo en gimnasio (Nivel Medio Alto):\n- Press de banca 5x12\n- Sentadillas 5x15\n- Peso muerto 5x10",
+          Profesional: "Rutina para Ectomorfo en gimnasio (Nivel Profesional):\n- Press de banca 5x15\n- Sentadillas 5x20\n- Peso muerto 5x12"
+        },
+        Endomorfo: {
+          Muy_Bajo: "Rutina para Endomorfo en gimnasio (Nivel Muy Bajo):\n- Press de banca 3x10\n- Sentadillas 3x12\n- Peso muerto 3x8",
+          Bajo: "Rutina para Endomorfo en gimnasio (Nivel Bajo):\n- Press de banca 4x10\n- Sentadillas 4x12\n- Peso muerto 4x8",
+          Medio: "Rutina para Endomorfo en gimnasio (Nivel Medio):\n- Press de banca 4x12\n- Sentadillas 4x15\n- Peso muerto 4x10",
+          Medio_Alto: "Rutina para Endomorfo en gimnasio (Nivel Medio Alto):\n- Press de banca 5x12\n- Sentadillas 5x15\n- Peso muerto 5x10",
+          Profesional: "Rutina para Endomorfo en gimnasio (Nivel Profesional):\n- Press de banca 5x15\n- Sentadillas 5x20\n- Peso muerto 5x12"
+        },
+        Mesomorfo: {
+          Muy_Bajo: "Rutina para Mesomorfo en gimnasio (Nivel Muy Bajo):\n- Press de banca 3x10\n- Sentadillas 3x12\n- Peso muerto 3x8",
+          Bajo: "Rutina para Mesomorfo en gimnasio (Nivel Bajo):\n- Press de banca 4x10\n- Sentadillas 4x12\n- Peso muerto 4x8",
+          Medio: "Rutina para Mesomorfo en gimnasio (Nivel Medio):\n- Press de banca 4x12\n- Sentadillas 4x15\n- Peso muerto 4x10",
+          Medio_Alto: "Rutina para Mesomorfo en gimnasio (Nivel Medio Alto):\n- Press de banca 5x12\n- Sentadillas 5x15\n- Peso muerto 5x10",
+          Profesional: "Rutina para Mesomorfo en gimnasio (Nivel Profesional):\n- Press de banca 5x15\n- Sentadillas 5x20\n- Peso muerto 5x12"
+        }
+      },
+      casa: {
+        Ectomorfo: {
+          Muy_Bajo: "Rutina para Ectomorfo en casa (Nivel Muy Bajo):\n- Flexiones 3x10\n- Sentadillas 3x12\n- Plancha 3x30s",
+          Bajo: "Rutina para Ectomorfo en casa (Nivel Bajo):\n- Flexiones 4x10\n- Sentadillas 4x12\n- Plancha 4x30s",
+          Medio: "Rutina para Ectomorfo en casa (Nivel Medio):\n- Flexiones 4x12\n- Sentadillas 4x15\n- Plancha 4x45s",
+          Medio_Alto: "Rutina para Ectomorfo en casa (Nivel Medio Alto):\n- Flexiones 5x12\n- Sentadillas 5x15\n- Plancha 5x45s",
+          Profesional: "Rutina para Ectomorfo en casa (Nivel Profesional):\n- Flexiones 5x15\n- Sentadillas 5x20\n- Plancha 5x60s"
+        },
+        Endomorfo: {
+          Muy_Bajo: "Rutina para Endomorfo en casa (Nivel Muy Bajo):\n- Flexiones 3x10\n- Sentadillas 3x12\n- Plancha 3x30s",
+          Bajo: "Rutina para Endomorfo en casa (Nivel Bajo):\n- Flexiones 4x10\n- Sentadillas 4x12\n- Plancha 4x30s",
+          Medio: "Rutina para Endomorfo en casa (Nivel Medio):\n- Flexiones 4x12\n- Sentadillas 4x15\n- Plancha 4x45s",
+          Medio_Alto: "Rutina para Endomorfo en casa (Nivel Medio Alto):\n- Flexiones 5x12\n- Sentadillas 5x15\n- Plancha 5x45s",
+          Profesional: "Rutina para Endomorfo en casa (Nivel Profesional):\n- Flexiones 5x15\n- Sentadillas 5x20\n- Plancha 5x60s"
+        },
+        Mesomorfo: {
+          Muy_Bajo: "Rutina para Mesomorfo en casa (Nivel Muy Bajo):\n- Flexiones 3x10\n- Sentadillas 3x12\n- Plancha 3x30s",
+          Bajo: "Rutina para Mesomorfo en casa (Nivel Bajo):\n- Flexiones 4x10\n- Sentadillas 4x12\n- Plancha 4x30s",
+          Medio: "Rutina para Mesomorfo en casa (Nivel Medio):\n- Flexiones 4x12\n- Sentadillas 4x15\n- Plancha 4x45s",
+          Medio_Alto: "Rutina para Mesomorfo en casa (Nivel Medio Alto):\n- Flexiones 5x12\n- Sentadillas 5x15\n- Plancha 5x45s",
+          Profesional: "Rutina para Mesomorfo en casa (Nivel Profesional):\n- Flexiones 5x15\n- Sentadillas 5x20\n- Plancha 5x60s"
+        }
+      }
+    };
+
+    /* CHATBOT */
+    function sendMessage() {
+      const input = document.getElementById("userInput");
+      const message = input.value.trim();
+      if (message === "") return;
+      appendMessage("usuario", message);
+      input.value = "";
+      const response = getBotResponse(message);
+      setTimeout(() => { appendMessage("bot", response); }, 500);
+    }
+
+    function appendMessage(sender, message) {
+      const chatArea = document.getElementById("chatArea");
+      const messageDiv = document.createElement("div");
+      messageDiv.style.margin = "10px";
+      messageDiv.style.padding = "10px";
+      messageDiv.style.borderRadius = "10px";
+      messageDiv.style.maxWidth = "80%";
+      messageDiv.style.display = "inline-block";
+      if (sender === "usuario") {
+        messageDiv.style.backgroundColor = "#DCF8C6";
+        messageDiv.style.textAlign = "right";
+        messageDiv.innerHTML = `<strong>Tú:</strong> ${message}`;
+        const containerDiv = document.createElement("div");
+        containerDiv.style.textAlign = "right";
+        containerDiv.appendChild(messageDiv);
+        chatArea.appendChild(containerDiv);
+      } else {
+        messageDiv.style.backgroundColor = "#F1F0F0";
+        messageDiv.style.textAlign = "left";
+        messageDiv.innerHTML = `<span style="font-size: 24px; margin-right: 5px;">🏋️‍♂️</span><strong>Entrenador:</strong> ${message}`;
+        const containerDiv = document.createElement("div");
+        containerDiv.style.textAlign = "left";
+        containerDiv.appendChild(messageDiv);
+        chatArea.appendChild(containerDiv);
+      }
+      chatArea.scrollTop = chatArea.scrollHeight;
+    }
+
+    function getBotResponse(message) {
+      const msg = message.toLowerCase();
+      if (msg.includes("hola") || msg.includes("buenos"))
+        return "¡Hola! Soy tu entrenador virtual. ¿En qué puedo ayudarte hoy?";
+      else if (msg.includes("rutina"))
+        return "Puedo ayudarte a crear una rutina personalizada. ¿Buscas ganar masa, perder peso o definir?";
+      else if (msg.includes("dieta"))
+        return "Una dieta saludable requiere equilibrio: proteínas, carbohidratos y grasas adecuadas. ¿Cuál es tu objetivo principal?";
+      else if ((msg.includes("recomienda ejercicio") || (msg.includes("ejercicio") && msg.includes("añadir")))) {
+        let obj = "";
+        if (tipoCuerpoUsuario === "Ectomorfo") obj = "ganar_masa";
+        else if (tipoCuerpoUsuario === "Endomorfo") obj = "definicion";
+        else if (tipoCuerpoUsuario === "Mesomorfo" || tipoCuerpoUsuario === "Neutral") obj = "perder_peso";
+        else obj = "ganar_masa";
+        return getExerciseRecommendation(obj);
+      }
+      else if (msg.includes("ejercicio") || msg.includes("pesas"))
+        return "Para estructurar tus ejercicios, es importante saber si entrenas en casa o en el gimnasio. ¿Cuál es tu preferencia?";
+      else if (msg.includes("imc"))
+        return "El IMC es un indicador, pero no refleja la composición muscular. ¿Necesitas ayuda para calcularlo o interpretarlo?";
+      else if (msg.includes("descanso"))
+        return "El descanso es vital para la recuperación. Asegúrate de dormir al menos 7-8 horas cada noche.";
+      else if (msg.includes("motivación") || msg.includes("ánimo"))
+        return "¡Tú puedes lograrlo! La constancia y una mentalidad positiva son clave para alcanzar tus metas.";
+      else if (msg.includes("consejo"))
+        return "Mi consejo es combinar entrenamientos variados con una alimentación equilibrada y buen descanso. ¿Tienes alguna meta específica?";
+      else
+        return "Interesante, ¿puedes darme más detalles o formular tu pregunta de otra manera para ayudarte mejor?";
+    }
+
+    function getExerciseRecommendation(objective) {
+      let recommendations = exerciseRecommendations[objective];
+      if (!recommendations) return "No tengo recomendaciones específicas para ese objetivo, pero recuerda que la variedad y la progresión son clave.";
+      let response = "Aquí tienes algunas recomendaciones de ejercicios:\n\n";
+      recommendations.forEach(ex => {
+        response += `• ${ex.name}: Trabaja ${ex.muscles}. ${ex.explanation}\n\n`;
+      });
+      return response;
+    }
+
+    /* FUNCIONES PARA LA APP */
+    function nextStep(step, type = null) {
+      if (type) tipoCuerpoUsuario = type;
+      document.querySelectorAll('.eval').forEach(div => div.classList.add('hidden'));
+      document.getElementById('step' + step).classList.remove('hidden');
+    }
+
+    function setTrainingLevel(level) {
+      nivelEntrenamiento = level;
+      document.getElementById('step3').classList.add('hidden');
+      document.getElementById('step4').classList.remove('hidden');
+    }
+
+    function setGymAccess(access) {
+      gymAccess = access;
+      document.getElementById('step4').classList.add('hidden');
+      document.getElementById('mainSection').classList.remove('hidden');
+      mostrarRutina();
+    }
+
+    function showTab(tabName) {
+      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
+      document.getElementById(tabName).classList.remove('hidden');
+      document.querySelectorAll('.tab button').forEach(button => button.classList.remove('active'));
+      document.querySelector(`.tab button[onclick="showTab('${tabName}')"]`).classList.add('active');
+    }
+
+    function mostrarRutina() {
+      let objetivo = "";
+      if (tipoCuerpoUsuario === "Ectomorfo") objetivo = "Ectomorfo";
+      else if (tipoCuerpoUsuario === "Endomorfo") objetivo = "Endomorfo";
+      else if (tipoCuerpoUsuario === "Mesomorfo" || tipoCuerpoUsuario === "Neutral") objetivo = "Mesomorfo";
+      else objetivo = "Ectomorfo"; // Default
+
+      const nivel = nivelEntrenamiento.replace(/ /g, "_"); // Reemplaza espacios con guiones bajos
+      const rutinaBase = gymAccess ? rutinas.gym[objetivo][nivel] : rutinas.casa[objetivo][nivel];
+
+      let rutinaProgresiva = aumentarRepeticiones(rutinaBase, semanaActual);
+      rutinaProgresiva += "\n\nNivel de entrenamiento: " + nivelEntrenamiento;
+      document.getElementById('rutinaTexto').value = rutinaProgresiva;
+    }
+
+    function aumentarRepeticiones(rutina, semana) {
+      let increment = semana - 1;
+      let rutinaModificada = rutina.replace(/(\d+)x(\d+)/g, (match, sets, reps) => {
+        let newReps = parseInt(reps) + increment;
+        return sets + "x" + newReps;
+      });
+      let extraExercisesCount = Math.floor(semana / 6);
+      let extraExercises = "";
+      for (let i = 0; i < extraExercisesCount; i++) {
+        extraExercises += "\n- Ejercicio extra: Burpees 3x15";
+      }
+      return rutinaModificada + extraExercises;
+    }
+
+    function completarSemana() {
+      semanaActual++;
+      document.getElementById('semanaActual').textContent = semanaActual;
+      mostrarRutina();
+      actualizarBarraProgreso();
+    }
+
+    function actualizarBarraProgreso() {
+      const progreso = (semanaActual % 4) * 25;
+      document.getElementById('progressBar').style.width = `${progreso}%`;
+    }
+
+    function guardarRutina() { alert("Rutina guardada correctamente."); }
+
+    let pesos = [], alturas = [];
+    function addWeight() {
+      const weight = parseFloat(document.getElementById('weight').value),
+        height = parseFloat(document.getElementById('height').value);
+      if (!isNaN(weight) && !isNaN(height)) {
+        pesos.push(weight);
+        alturas.push(height);
+        updateWeightChart();
+        calculateIMC(weight, height);
+      }
+    }
+
+    function clearWeights() {
+      pesos = []; alturas = [];
+      updateWeightChart();
+      document.getElementById('imcResult').classList.add('hidden');
+    }
+
+    function updateWeightChart() {
+      const ctx = document.getElementById('weightChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: Array.from({ length: pesos.length }, (_, i) => i + 1),
+          datasets: [{ label: 'Peso', data: pesos, borderColor: 'rgb(75,192,192)', tension: 0.1 }]
+        }
+      });
+    }
+
+    function calculateIMC(weight, height) {
+      const imc = weight / (height * height);
+      document.getElementById('imcValue').textContent = `Tu IMC es: ${imc.toFixed(2)}`;
+      document.getElementById('imcResult').classList.remove('hidden');
+    }
+
+    function mostrarDieta() {
+      const objetivo = document.getElementById('objetivoDieta').value;
+      let dieta = "";
+      switch (objetivo) {
+        case "ganar_masa": dieta = "Dieta recomendada para ganar masa muscular: Aumenta calorías con proteínas y carbohidratos de bajo índice glucémico."; break;
+        case "definicion": dieta = "Dieta recomendada para definición: Reduce calorías, con énfasis en proteínas y vegetales."; break;
+        case "perder_peso": dieta = "Dieta recomendada para perder peso: Reduce calorías, aumenta fibra y proteína magra."; break;
+      }
+      document.getElementById('dietaTexto').textContent = dieta;
+    }
+
+    window.onload = function () { actualizarBarraProgreso(); }
+
+    /* Función para alternar la visibilidad del ChatBot */
+    function toggleChatbot() {
+      const chatDiv = document.getElementById("chatbot");
+      if (chatDiv.classList.contains("hidden")) {
+        chatDiv.classList.remove("hidden");
+      } else {
+        chatDiv.classList.add("hidden");
+      }
+    }
+  </script>
+</body>
+</html>
+
